@@ -1,0 +1,40 @@
+name: Upstream Sync
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    # 每天国际标准时间 00:00 运行一次 (北京时间早上 8:00)
+    - cron: "0 0 * * *"
+  workflow_dispatch: # 允许你在 Actions 页面手动点击按钮触发更新
+
+jobs:
+  sync_latest_from_upstream:
+    name: Sync latest commits from upstream repo
+    runs-on: ubuntu-latest
+    if: ${{ github.event.repository.fork }}
+
+    steps:
+      # 第一步：检出你的代码
+      - name: Checkout target repo
+        uses: actions/checkout@v3
+
+      # 第二步：同步上游代码
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
+        with:
+          target_sync_branch: main       # 你的仓库分支 (通常是 main 或 master，请确认)
+          upstream_sync_repo: develop202/kgcheckin # 上游仓库地址
+          upstream_sync_branch: main     # 上游仓库分支 (请确认上游是 main 还是 master)
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }} # 自动生成的令牌，无需手动设置
+          test_mode: false
+
+      # 第三步：打印日志（可选）
+      - name: Sync check
+        if: failure()
+        run: |
+          echo "[Error] 由于上游仓库的 workflow 文件变更，无法自动更新。"
+          echo "[Error] 请手动 Fetch Upstream。"
+          exit 1
