@@ -31,6 +31,9 @@ async function main() {
       const userDetail = await send(`/user/detail?timestrap=${Date.now()}`, "GET", headers)
       if (userDetail?.data?.nickname == null) {
         printRed(`token过期或账号不存在, userid: ${user.userid}`)
+        errorMsg[user.userid] = {
+          msg: `token过期或账号不存在, userid: ${user.userid}`
+        }
         continue
       }
       printMagenta(`账号 ${userDetail?.data?.nickname} 开始领取VIP...`)
@@ -62,10 +65,11 @@ async function main() {
           }
         } else if (ad.error_code === 30002) {
           printGreen("今天次数已用光")
+          break
         } else {
-          printRed(`第${i}次领取失败，目前属于已知问题`)
-          console.dir(ad, { depth: null })
-          // errorMsg[userDetail?.data?.nickname + " ad"] = ad
+          printRed(`第${i}次领取失败`)
+          // console.dir(ad, { depth: null })
+          errorMsg[userDetail?.data?.nickname + " ad"] = ad
           break
         }
       }
